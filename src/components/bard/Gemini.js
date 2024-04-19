@@ -21,7 +21,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 export default function Gemini() {
   const msgsEndRef = useRef(null);
   const elements = useRef([]);
-  const [input, setInput] = useState('');
+  const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -29,23 +29,23 @@ export default function Gemini() {
   const apikey = process.env.REACT_APP_BARD_API_KEY;
   const genAI = new GoogleGenerativeAI(apikey);
 
-  const prompt = (e) => {
+  const inputs = (e) => {
     const btn = document.querySelector('#btn');
-    const msg = e.target.value.trim();
+    const inps = e.target.value.trim();
 
-    if (msg === '') {
+    if (inps === '') {
       btn.classList.add('disabled');
     } else {
-      setInput(msg);
+      setPrompt(inps);
       btn.classList.remove('disabled');
     }
   };
 
-  useEffect(() => {
-    msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    hljs.initHighlighting();
-  }, [messages]);
-
+   useEffect(() => {
+      msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      hljs.initHighlighting();
+   },[messages]);
+   
   useEffect(() => {
     if (elements.current.length !== 0) {
       const elem = elements.current;
@@ -61,10 +61,8 @@ export default function Gemini() {
               let isLanguage = childElem[j].innerHTML.split(' ')[1];
               let language= '';
               if(isLanguage.includes('language')) {
-                 //alert('yes')
                  language = isLanguage.slice(16);
               }
-              //alert(language)
               const copyDiv = document.createElement('div')
                  copyDiv.classList.add(
                     'px-2', 'py-1',
@@ -101,25 +99,26 @@ export default function Gemini() {
     setLoading(true);
     inp.value = '';
     btn.classList.add('disabled');
-    setMessages([...messages, { text: input, isUser: true }]);
-
+    
+    setMessages([...messages, 
+       { text: prompt, isUser: true }]);
+    
     // For text-only input, use the gemini-pro model
     const model = genAI.getGenerativeModel({
       model: 'gemini-pro',
     });
 
-    const result = await model.generateContent(input);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const data = response.text();
-
+    
     setMessages([
       ...messages,
-      { text: input, isUser: true },
+      { text: prompt, isUser: true },
       { text: data, isUser: false },
     ]);
 
     setLoading(false);
-    setInput('');
   };
 
   return (
@@ -131,7 +130,7 @@ export default function Gemini() {
 
         {/* Messages Container Starts */}
         <div className="container"
-          style={{ width: '100%', height: '74vh', overflowY: 'scroll' }}
+          style={{ width: '100%', height: '74vh', overflowY: 'scroll'}}
         >
         
           {/* Greeting Message */}
@@ -165,13 +164,14 @@ export default function Gemini() {
               </div>
             </div>
           ))}
-
-          {/* Loading */}
-          {loading && <Spinner />}
-
-          {/* For ScrollIntoView */}
-          { input !== '' && 
-          <div className="py-5 my-5" ref={msgsEndRef} />}
+          
+           {/* Loading */}
+           {loading && <Spinner />}
+           
+           {/* For ScrollIntoView */}
+           { messages.length !== 0 &&
+           <div className="py-5 my-5" ref={msgsEndRef} />}
+           
         </div>
 
         <div className="fixed-bottom">
@@ -183,7 +183,7 @@ export default function Gemini() {
               aria-label="Enter your prompt here"
               aria-describedby="basic-addon2"
               id="inp"
-              onChange={prompt}
+              onChange={inputs}
             />
             <div className="input-group-append">
               <button
