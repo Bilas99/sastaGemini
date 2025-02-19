@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+.loading {
+	@apply inline-flex h-3 w-3 animate-ping rounded-full bg-sky-400 opacity-70;
+}
